@@ -2,16 +2,426 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Welcome</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Startup Acquisition & Validation Predictor</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.27.2/axios.min.js"></script>
 </head>
-<body class="bg-green-100 flex items-center justify-center min-h-screen">
-  <div class="bg-white p-10 rounded shadow text-center">
-    <h1 class="text-3xl font-bold">Welcome, {{ user.name }}!</h1>
-    <p class="mt-2 text-gray-700">You are now logged in with email: {{ user.email }}</p>
-    <div class="mt-6">
-      <a href="/logout" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</a>
+<body class="bg-gray-100 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-indigo-600 text-white shadow-lg">
+    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+      <a href="/index" class="text-xl font-bold">Startup A&V Predictor</a>
+      <div class="flex items-center space-x-4">
+        <span class="font-medium">Welcome, {{ user.name }}!</span>
+        <a href="/logout" class="bg-white text-indigo-600 px-4 py-2 rounded hover:bg-gray-100 transition">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-6 py-8">
+    <!-- Dashboard Header -->
+    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 mb-2">Startup Acquisition Prediction Dashboard</h1>
+      <p class="text-gray-600">Analyze your startup's potential for acquisition and validate your business model.</p>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Left Column - Input Form -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Startup Information</h2>
+        <form id="predictForm" class="space-y-4">
+          <div>
+            <label class="block text-gray-700 mb-2" for="startupName">Startup Name</label>
+            <input type="text" id="startupName" name="name" class="w-full border rounded p-2" placeholder="Your Startup Name">
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="industry">Industry</label>
+            <select id="industry" name="industry" class="w-full border rounded p-2">
+              <option value="">Select Industry</option>
+              <option value="tech">Technology</option>
+              <option value="fintech">FinTech</option>
+              <option value="health">Healthcare</option>
+              <option value="ecommerce">E-Commerce</option>
+              <option value="saas">SaaS</option>
+              <option value="ai">AI/ML</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="fundingStage">Funding Stage</label>
+            <select id="fundingStage" name="fundingStage" class="w-full border rounded p-2">
+              <option value="">Select Stage</option>
+              <option value="pre-seed">Pre-Seed</option>
+              <option value="seed">Seed</option>
+              <option value="series-a">Series A</option>
+              <option value="series-b">Series B</option>
+              <option value="series-c">Series C+</option>
+            </select>
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="revenue">Annual Revenue (USD)</label>
+            <input type="number" id="revenue" name="revenue" class="w-full border rounded p-2" placeholder="e.g. 500000">
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="growthRate">Growth Rate (% YoY)</label>
+            <input type="number" id="growthRate" name="growthRate" class="w-full border rounded p-2" placeholder="e.g. 25">
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="employees">Number of Employees</label>
+            <input type="number" id="employees" name="employees" class="w-full border rounded p-2" placeholder="e.g. 15">
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 mb-2" for="fundingRaised">Total Funding Raised (USD)</label>
+            <input type="number" id="fundingRaised" name="fundingRaised" class="w-full border rounded p-2" placeholder="e.g. 2000000">
+          </div>
+          
+          <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 transition">
+            Generate Prediction
+          </button>
+        </form>
+      </div>
+      
+      <!-- Middle Column - Results -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Acquisition Prediction</h2>
+        
+        <div id="resultSection" class="hidden">
+          <!-- Acquisition Score -->
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Acquisition Likelihood Score</h3>
+            <div class="w-full bg-gray-200 rounded-full h-6">
+              <div id="acquisitionScore" class="bg-indigo-600 h-6 rounded-full flex items-center justify-center text-white text-sm font-medium" style="width: 0%">0%</div>
+            </div>
+          </div>
+          
+          <!-- Key Factors -->
+          <div class="mb-6">
+            <h3 class="text-lg font-semibold mb-2">Key Factors</h3>
+            <ul id="keyFactors" class="space-y-2 text-gray-700">
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                </svg>
+                <span>Strong growth trajectory</span>
+              </li>
+              <li class="flex items-start">
+                <svg class="h-5 w-5 text-yellow-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>Limited market size</span>
+              </li>
+            </ul>
+          </div>
+          
+          <!-- Potential Acquirers -->
+          <div>
+            <h3 class="text-lg font-semibold mb-2">Potential Acquirers</h3>
+            <ul id="potentialAcquirers" class="space-y-2 text-gray-700">
+              <li class="bg-gray-100 p-2 rounded">Amazon</li>
+              <li class="bg-gray-100 p-2 rounded">Microsoft</li>
+              <li class="bg-gray-100 p-2 rounded">Meta</li>
+            </ul>
+          </div>
+        </div>
+        
+        <div id="emptyResult" class="flex flex-col items-center justify-center h-64 text-gray-500">
+          <svg class="h-16 w-16 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <p>Enter your startup details and click "Generate Prediction" to see results</p>
+        </div>
+      </div>
+      
+      <!-- Right Column - Analytics -->
+      <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-bold text-gray-800 mb-4">Performance Analytics</h2>
+        
+        <!-- Revenue Trend Chart -->
+        <div class="mb-6">
+          <h3 class="text-lg font-semibold mb-2">Revenue Growth</h3>
+          <div class="h-64">
+            <canvas id="revenueChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Industry Comparison -->
+        <div>
+          <h3 class="text-lg font-semibold mb-2">Industry Comparison</h3>
+          <div class="h-64">
+            <canvas id="industryChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recommendations Section -->
+    <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Improvement Recommendations</h2>
+      <div id="recommendations" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="border rounded-lg p-4">
+          <h3 class="font-semibold text-indigo-600 mb-2">Growth Strategy</h3>
+          <p class="text-gray-700">Focus on expanding your customer base through targeted marketing campaigns and partnerships.</p>
+        </div>
+        <div class="border rounded-lg p-4">
+          <h3 class="font-semibold text-indigo-600 mb-2">Financial Optimization</h3>
+          <p class="text-gray-700">Improve your unit economics and reduce customer acquisition costs to increase profitability.</p>
+        </div>
+        <div class="border rounded-lg p-4">
+          <h3 class="font-semibold text-indigo-600 mb-2">Team Development</h3>
+          <p class="text-gray-700">Expand your leadership team with experienced executives who have previous exit experience.</p>
+        </div>
+      </div>
     </div>
   </div>
+  
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-6 mt-12">
+    <div class="container mx-auto px-6">
+      <div class="flex flex-col md:flex-row justify-between items-center">
+        <div class="mb-4 md:mb-0">
+          <h3 class="text-lg font-bold">Startup A&V Predictor</h3>
+          <p class="text-gray-300 text-sm">© 2025 All rights reserved</p>
+        </div>
+        <div class="flex space-x-4">
+          <a href="#" class="text-gray-300 hover:text-white">About</a>
+          <a href="#" class="text-gray-300 hover:text-white">Privacy Policy</a>
+          <a href="#" class="text-gray-300 hover:text-white">Terms of Service</a>
+          <a href="#" class="text-gray-300 hover:text-white">Contact</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Initialize charts when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      // Revenue Chart (Example data)
+      const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+      const revenueChart = new Chart(revenueCtx, {
+        type: 'line',
+        data: {
+          labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+          datasets: [{
+            label: 'Revenue ($)',
+            data: [0, 0, 0, 0],
+            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+      
+      // Industry Comparison Chart (Example data)
+      const industryCtx = document.getElementById('industryChart').getContext('2d');
+      const industryChart = new Chart(industryCtx, {
+        type: 'radar',
+        data: {
+          labels: ['Growth', 'Profitability', 'Team', 'Market Size', 'Innovation'],
+          datasets: [{
+            label: 'Your Startup',
+            data: [0, 0, 0, 0, 0],
+            backgroundColor: 'rgba(79, 70, 229, 0.2)',
+            borderColor: 'rgba(79, 70, 229, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(79, 70, 229, 1)'
+          }, {
+            label: 'Industry Average',
+            data: [3, 2, 3, 4, 3],
+            backgroundColor: 'rgba(156, 163, 175, 0.2)',
+            borderColor: 'rgba(156, 163, 175, 1)',
+            borderWidth: 2,
+            pointBackgroundColor: 'rgba(156, 163, 175, 1)'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              min: 0,
+              max: 5,
+              ticks: {
+                stepSize: 1
+              }
+            }
+          }
+        }
+      });
+      
+      // Form submission handling
+      document.getElementById('predictForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Get form values
+        const formData = {
+          name: document.getElementById('startupName').value,
+          industry: document.getElementById('industry').value,
+          fundingStage: document.getElementById('fundingStage').value,
+          revenue: parseInt(document.getElementById('revenue').value) || 0,
+          growthRate: parseInt(document.getElementById('growthRate').value) || 0,
+          employees: parseInt(document.getElementById('employees').value) || 0,
+          fundingRaised: parseInt(document.getElementById('fundingRaised').value) || 0
+        };
+        
+        // Simple demo calculation (in a real app, this would be an API call)
+        const score = calculateDemoScore(formData);
+        
+        // Update UI with results
+        document.getElementById('emptyResult').classList.add('hidden');
+        document.getElementById('resultSection').classList.remove('hidden');
+        
+        // Update acquisition score
+        const scoreEl = document.getElementById('acquisitionScore');
+        scoreEl.style.width = score + '%';
+        scoreEl.textContent = score + '%';
+        
+        // Update chart data
+        updateCharts(formData);
+        
+        // Update recommendations based on input
+        updateRecommendations(formData);
+      });
+      
+      // Demo score calculation function
+      function calculateDemoScore(data) {
+        // This is just a simplified demo calculation
+        // In a real application, this would be a more complex model or API call
+        
+        // Base score
+        let score = 50;
+        
+        // Industry factors
+        if (data.industry === 'tech' || data.industry === 'ai' || data.industry === 'saas') {
+          score += 10;
+        }
+        
+        // Revenue factors
+        if (data.revenue > 1000000) score += 10;
+        else if (data.revenue > 500000) score += 5;
+        
+        // Growth factors
+        if (data.growthRate > 50) score += 15;
+        else if (data.growthRate > 20) score += 10;
+        
+        // Funding stage
+        if (data.fundingStage === 'series-b' || data.fundingStage === 'series-c') {
+          score += 10;
+        }
+        
+        // Cap at 95% (leave room for uncertainty)
+        return Math.min(95, Math.max(5, score));
+      }
+      
+      // Update charts with user input
+      function updateCharts(data) {
+        // Update revenue chart (simulate quarterly revenue based on annual)
+        const quarterlyRevenue = data.revenue / 4;
+        const growth = data.growthRate / 100;
+        
+        revenueChart.data.datasets[0].data = [
+          quarterlyRevenue,
+          quarterlyRevenue * (1 + growth/4),
+          quarterlyRevenue * (1 + growth/2),
+          quarterlyRevenue * (1 + growth)
+        ];
+        revenueChart.update();
+        
+        // Update industry comparison chart
+        const growthScore = Math.min(5, data.growthRate / 20);
+        const profitabilityScore = Math.min(5, (data.revenue - data.fundingRaised/2) / data.revenue * 5);
+        const teamScore = Math.min(5, data.employees / 20);
+        const marketSizeScore = data.industry === 'tech' || data.industry === 'fintech' ? 4 : 3;
+        const innovationScore = data.industry === 'ai' ? 5 : 3;
+        
+        industryChart.data.datasets[0].data = [
+          growthScore,
+          profitabilityScore,
+          teamScore,
+          marketSizeScore,
+          innovationScore
+        ];
+        industryChart.update();
+      }
+      
+      // Update recommendations based on input
+      function updateRecommendations(data) {
+        const recommendationsContainer = document.getElementById('recommendations');
+        recommendationsContainer.innerHTML = '';
+        
+        // Add growth recommendation
+        if (data.growthRate < 20) {
+          addRecommendation(
+            'Growth Strategy', 
+            'Focus on accelerating growth through product expansion and marketing. Your current growth rate is below industry averages for acquisition targets.'
+          );
+        } else {
+          addRecommendation(
+            'Maintain Growth', 
+            'Your growth rate is strong. Consider focusing on sustainable growth strategies while maintaining quality.'
+          );
+        }
+        
+        // Add funding recommendation
+        if (data.fundingStage === 'pre-seed' || data.fundingStage === 'seed') {
+          addRecommendation(
+            'Fundraising Strategy', 
+            'Consider securing Series A funding to accelerate growth and increase acquisition attractiveness.'
+          );
+        } else if (data.fundingStage === 'series-a') {
+          addRecommendation(
+            'Strategic Partnerships', 
+            'Form strategic partnerships with potential acquirers to increase visibility and integration potential.'
+          );
+        }
+        
+        // Add team recommendation
+        if (data.employees < 10) {
+          addRecommendation(
+            'Team Development', 
+            'Strengthen your leadership team with experienced executives who have previous exit experience.'
+          );
+        } else {
+          addRecommendation(
+            'Talent Retention', 
+            'Implement retention strategies for key team members to maintain stability during acquisition talks.'
+          );
+        }
+      }
+      
+      // Helper function to add recommendation cards
+      function addRecommendation(title, content) {
+        const recommendationsContainer = document.getElementById('recommendations');
+        
+        const card = document.createElement('div');
+        card.className = 'border rounded-lg p-4';
+        card.innerHTML = `
+          <h3 class="font-semibold text-indigo-600 mb-2">${title}</h3>
+          <p class="text-gray-700">${content}</p>
+        `;
+        
+        recommendationsContainer.appendChild(card);
+      }
+    });
+  </script>
 </body>
 </html>
