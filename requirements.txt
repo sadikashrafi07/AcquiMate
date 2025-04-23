@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-dotenv
+python-multipart
+jinja2
+passlib
+bcrypt
+authlib
+httpx
+itsdangerous
+mysql-connector-python
+email-validator
+starlette
