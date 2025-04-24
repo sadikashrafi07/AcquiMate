@@ -1,0 +1,31 @@
+<!-- navigation.html -->
+<nav class="bg-indigo-600 text-white shadow-lg">
+    <div class="container mx-auto px-6 py-3 flex justify-between items-center">
+      <a href="/index" class="text-xl font-bold">Acquimate</a>
+  
+      <!-- Profile Dropdown Container -->
+      <div class="relative group">
+        <!-- Profile Image -->
+        <div class="flex items-center cursor-pointer">
+          <img src="static/Images/Profile.jpg" alt="Profile"
+               class="w-10 h-10 rounded-full border-2 border-white" />
+        </div>
+  
+        <!-- Dropdown Menu -->
+        <div class="absolute right-0 mt-2 w-48 bg-white text-black rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-50">
+          <ul class="py-2">
+            <li>
+              <a href="/update-profile" class="block px-4 py-2 hover:bg-gray-100">
+                Update Profile
+              </a>
+            </li>
+            <li>
+              <a href="/logout" class="block px-4 py-2 hover:bg-gray-100 text-red-600">
+                Logout
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </nav>
