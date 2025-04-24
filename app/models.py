@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from .database import Base
 
 class User(Base):
@@ -7,4 +7,6 @@ class User(Base):
     name = Column(String(255), index=True)
     email = Column(String(255), unique=True, index=True)
     password = Column(String(255))
-    # Removed the is_oauth_user column
+    first_name = Column(String(255), nullable=True)
+    last_name = Column(String(255), nullable=True)
+    profile_image = Column(String(255), nullable=True)
