@@ -228,8 +228,18 @@ async def update_profile_post(
             
         request.session["user"] = session_data
         
-        # Redirect to index page on success
-        return RedirectResponse("/index", status_code=303)
+        # Return to the profile page with a success message
+        # The page will handle redirect after showing the message
+        return templates.TemplateResponse(
+            "update_profile.html",
+            {
+                "request": request, 
+                "user": final_user, 
+                "message": "Profile updated successfully!", 
+                "error": False, 
+                "is_oauth_user": is_oauth_user
+            }
+        )
         
     except HTTPException as e:
         user = crud.get_user_by_id(db, user_id)

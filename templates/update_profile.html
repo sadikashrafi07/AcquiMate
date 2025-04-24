@@ -5,6 +5,14 @@
   <meta charset="UTF-8">
   <title>Edit Your Profile - Acquimate</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .success-message {
+      transition: opacity 0.5s ease-in-out;
+    }
+    .fade-out {
+      opacity: 0;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
   <!-- Include navigation -->
@@ -15,7 +23,7 @@
       <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Edit Your Profile</h1>
       
       {% if message %}
-      <div class="{% if error %}bg-red-100 border border-red-400 text-red-700{% else %}bg-green-100 border border-green-400 text-green-700{% endif %} px-4 py-3 rounded mb-4">
+      <div id="alert-message" class="success-message {% if error %}bg-red-100 border border-red-400 text-red-700{% else %}bg-green-100 border border-green-400 text-green-700{% endif %} px-4 py-3 rounded mb-4">
         {{ message }}
       </div>
       {% endif %}
@@ -95,5 +103,26 @@
       </form>
     </div>
   </div>
+
+  <!-- JavaScript for handling success message and redirection -->
+  {% if message and not error %}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Wait 3 seconds before redirecting
+      setTimeout(function() {
+        // Fade out the message first
+        const alertMessage = document.getElementById('alert-message');
+        if (alertMessage) {
+          alertMessage.classList.add('fade-out');
+        }
+        
+        // Then redirect after a short delay
+        setTimeout(function() {
+          window.location.href = '/index';
+        }, 500);
+      }, 3000);
+    });
+  </script>
+  {% endif %}
 </body>
 </html>

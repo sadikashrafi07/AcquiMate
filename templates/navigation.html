@@ -7,8 +7,13 @@
       <div class="relative group">
         <!-- Profile Image -->
         <div class="flex items-center cursor-pointer">
-          <img src="static/Images/Profile.jpg" alt="Profile"
-               class="w-10 h-10 rounded-full border-2 border-white" />
+          {% if user and user.profile_image %}
+            <img src="{{ user.profile_image }}" alt="Profile"
+                 class="w-10 h-10 rounded-full border-2 border-white object-cover" />
+          {% else %}
+            <img src="/static/Images/Profile.jpg" alt="Profile"
+                 class="w-10 h-10 rounded-full border-2 border-white" />
+          {% endif %}
         </div>
   
         <!-- Dropdown Menu -->
@@ -29,5 +34,3 @@
       </div>
     </div>
   </nav>
-
-  
